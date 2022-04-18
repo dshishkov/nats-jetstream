@@ -1,0 +1,40 @@
+{
+  "name": "nats-jetstream",
+  "version": "0.0.1",
+  "description": "Testing NATS with JetStream",
+  "main": "src",
+  "scripts": {
+    "start": "node src/",
+    "lint": "eslint src/.",
+    "lint:fix": "npm run lint -- --fix",
+    "fmt": "prettier --ignore-path /.gitignore --write 'src/**/*.js'",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "fix": "npm run fmt && npm run lint:fix"
+  },
+  "keywords": [
+    "NATS",
+    "JetStream"
+  ],
+  "author": "Dimitar Shishkov",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "nats": "^2.6.1"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.17.0",
+    "eslint": "^8.13.0",
+    "eslint-config-smartprocure": "^3.0.2",
+    "prettier": "^2.6.2"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "arrowParens": "avoid"
+  },
+  "eslintIgnore": [
+    "coverage"
+  ]
+}

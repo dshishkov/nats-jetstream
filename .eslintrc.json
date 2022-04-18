@@ -1,0 +1,13 @@
+{
+  "extends": ["smartprocure"],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "requireConfigFile": false
+  },
+  "rules": {
+    "no-console": "off",
+    "no-unused-vars": "warn",
+    "lodash/prefer-lodash-method": "off"
+  }
+}
