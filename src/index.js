@@ -84,13 +84,13 @@ let consumePushSubscription = async (sub, name) => {
       // delayed retry without blocking from consuming the next message
       // (can be linear or exponential based on logic on redeliveryCount)
       // !!! This allows for delayed retries without blocking the processing of the next message
-      await msg.nak(5000)
+      msg.nak(5000)
     } else {
       // simulate slow message once every 100 messages
       let delayProcessingMs = msgCount % 100 === 0 ? 5000 : 0
       await new Promise(resolve => {
         setTimeout(async () => {
-          let ack = await msg.ack()
+          let ack = await msg.ackAck()
           resolve(ack)
           msgCount++
         }, delayProcessingMs)
