@@ -160,7 +160,7 @@ let consumePullSubscription = async (pullSub, name) => {
     )
 
     new Promise((resolve, reject) => {
-      // if initial attempt, retry in some time (basically fake a processing error)
+      // if initial attempt, retry in some time (basically, fake a processing error)
       if (!redelivered) {
         pullSub.messagesInProgress--
         // delayed retry without blocking from consuming the next message
@@ -169,7 +169,7 @@ let consumePullSubscription = async (pullSub, name) => {
         msg.nak(5000)
         resolve()
       } else {
-        // simulate slow message once every 50 messages processed
+        // simulate slow processing of message once every 50 messages processed
         let delayProcessingMs = pullSub.getProcessed() % 50 === 0 ? 5000 : 0
         new Promise(resolveTimeout => {
           setTimeout(async () => {
@@ -202,21 +202,20 @@ let streamWorkerPullQueue = async () => {
   console.log(allConsumers.find(({ name }) => name === consumerName))
 
   // increase batch size and/or numberOfSubs to horizontally scale
-  let batch = 5
-  let numberOfSubs = 5
-  // number of attempts per message
-  let maxDeliver = 5
-  let pullIntervalMs = 1000
+  let batch = 5 // number of messages a single subscription can process concurrently
+  let numberOfSubs = 3 // number of pull subscribers (this will be probably just one per process/instance for each stream in a real world scenario)
+  let maxDeliver = 5 // number of attempts per message
+  let pullIntervalMs = 1000 // how often we try to pull for messages to process
 
   let subOptions = consumerOpts()
-  subOptions.durable('testStream-consumer-pull')
-  subOptions.maxDeliver(maxDeliver)
-  // disable consumer max for pending messages since using a pull mechanism
-  subOptions.maxAckPending(-1)
+  subOptions.durable('testStream-consumer-pull') // tell JetStream to make this consumer persisted (fault-tolerant)
+  subOptions.maxDeliver(maxDeliver) // retries per message
+  subOptions.maxAckPending(-1) // disable consumer max for pending messages since using a pull mechanism
+  subOptions.deliverNew() // on initial create, consumer will only process newly created messages from the stream
 
   let pullSubs = []
   for (let i = 1; i <= numberOfSubs; i++) {
-    // pull subscriber
+    // setup pull subscriber
     let pullSub = await jetStream.pullSubscribe('testStream.*', subOptions)
     consumePullSubscription(pullSub, `pullSub-${i}`).catch(console.error)
     pullSubs.push(pullSub)
@@ -232,9 +231,13 @@ let streamWorkerPullQueue = async () => {
       let nextBatch = batch - pullSub.messagesInProgress
       if (nextBatch > 0) {
         console.log(`[${name}] Pulling ${nextBatch} message(s)`)
-        pullSub.pull({ batch, expires: pullIntervalMs })
+        // pull for messages to process (either number of messages specified by the batch size or if fewer,
+        // get as many are available by the time pullIntervalMs elapses, which could be 0)
+        pullSub.pull({ batch: nextBatch, expires: pullIntervalMs })
       } else {
-        console.log(`[${name}] Skip pull, subscription is busy processing`)
+        console.log(
+          `[${name}] Skip pull, subscription has reached max number of unacknowledged messages to process`
+        )
       }
     }
   }, pullIntervalMs)

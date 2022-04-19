@@ -1,4 +1,10 @@
-import { connect, JSONCodec, RetentionPolicy, StorageType } from 'nats'
+import {
+  connect,
+  DiscardPolicy,
+  JSONCodec,
+  RetentionPolicy,
+  StorageType,
+} from 'nats'
 
 let jsonCodec = new JSONCodec()
 
@@ -71,13 +77,21 @@ export let setupStream = async (
     retention = RetentionPolicy.Limits,
     subjects = [`${name}.*`],
     storage = StorageType.File,
+    // custom options for this fn, not related to the built-in JetStream config options
     deleteStreamIfExist = false,
     purge,
     deleteConsumers = false,
   } = {}
 ) => {
   let jsm = await nc.jetstreamManager()
-  let streamConfig = { name, subjects, retention, storage }
+  let streamConfig = {
+    name,
+    subjects,
+    retention,
+    storage,
+    // when the retention limits are reached on the stream, deny publishing new messages
+    discard: DiscardPolicy.New,
+  }
   let streamInfo
 
   try {
