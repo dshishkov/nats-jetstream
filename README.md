@@ -1,6 +1,6 @@
-# Setup NATS and JetStream with Docker
+# Setup NATS/JetStream and monitoring with Prometheus/Grafana on Docker
 
-```docker run -p 4222:4222 -p 8222:8222 -p 6222:6222 --name nats-server -ti nats:latest -js -sd /home/dimitar/jetstream-storage --auth aToK3n```
+```docker-compose -f nats.yml up```
 
 ## To run
 
